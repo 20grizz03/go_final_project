@@ -33,8 +33,10 @@ func main() {
 	r.Handle("/*", http.FileServer(http.Dir(webDir)))
 	// API-маршрут для вычисления следующей даты
 	r.Get("/api/nextdate", handlers.HandlerForNewDate)
-	//// добавление следующей задачи
+	// добавление следующей задачи
 	r.Post("/api/task", handlers.PostTask)
+	// отображение задач
+	r.Get("/api/tasks", handlers.GetTasks)
 
 	// Запуск сервера
 	log.Printf("Сервер запущен на http://localhost:%s/", port)

@@ -15,20 +15,17 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	decoder := json.NewDecoder(r.Body)
-
 	var task = models.Remind{}
 	// декодируем JSON
 	if err := decoder.Decode(&task); err != nil {
 		http.Error(w, `{"error":"Ошибка декодирования JSON"}`, http.StatusBadRequest)
 		return
 	}
-
 	// Проверяем обязательное поле title
 	if task.Title == "" {
 		http.Error(w, `{"error":"Не указан заголовок задачи"}`, http.StatusBadRequest)
 		return
 	}
-
 	// начинаем проверку даты
 	now := time.Now()
 	today := now.Format("20060102")
@@ -57,11 +54,9 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 				if task.Date != today {
 					task.Date = nextDate
 				}
-
 			}
 		}
 	}
-
 	// проверяем правило повторения в любом случае
 	if task.Repeat != "" {
 		_, err := repeatTask.NextDate(now, task.Date, task.Repeat)
@@ -70,12 +65,11 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	id, err := db.InsertTask(task)
+	id, err := db.InsertInDB(task)
 	if err != nil {
 		http.Error(w, `{"error":"Ошибка записи в БД"}`, http.StatusInternalServerError)
 		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	json.NewEncoder(w).Encode(map[string]interface{}{
