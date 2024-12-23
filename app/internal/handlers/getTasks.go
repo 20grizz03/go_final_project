@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"go_final/app/internal/db"
 	"net/http"
 )
@@ -18,7 +17,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	// ограничение на кол-во возвращаемых задач
 	const limit = 50
 
-	tasks, err := db.FindInDB(search, limit)
+	tasks, err := db.FindInDb(search, limit)
 	if err != nil {
 		http.Error(w, `{"error":"`+err.Error()+`"}`, http.StatusInternalServerError)
 		return
@@ -28,7 +27,7 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	var tasksForResponse []map[string]string
 	for _, task := range tasks {
 		tasksForResponse = append(tasksForResponse, map[string]string{
-			"id":      fmt.Sprintf("%d", task.ID),
+			"id":      task.ID,
 			"date":    task.Date,
 			"title":   task.Title,
 			"comment": task.Comment,

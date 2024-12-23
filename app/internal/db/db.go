@@ -1,6 +1,7 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
 	"go_final/app/internal/models"
 	"go_final/app/pkg/config"
@@ -22,7 +23,8 @@ func InsertInDB(task models.Remind) (uint64, error) {
 	return uint64(id), nil
 }
 
-func FindInDB(search string, limit int) ([]models.Remind, error) {
+// реализуем поиск в БД
+func FindInDb(search string, limit int) ([]models.Remind, error) {
 	var query string
 	var args []interface{}
 
@@ -62,4 +64,51 @@ func FindInDB(search string, limit int) ([]models.Remind, error) {
 		return nil, errors.New("ошибка постобработки данных из базы")
 	}
 	return tasks, nil
+}
+
+// получение задачи по ID
+func GetTaskByID(id int) (models.Remind, error) {
+	query := "SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?"
+	row := config.DB.QueryRow(query, id)
+	var task models.Remind
+	if err := row.Scan(&task.ID, &task.Date, &task.Title, &task.Comment, &task.Repeat); err != nil {
+		return models.Remind{}, errors.New("Задача не найдена")
+	}
+	return task, nil
+}
+
+// обновление функции
+func UpdateTask(task models.Remind) error {
+	query := `
+        UPDATE scheduler
+        SET date = ?, title = ?, comment = ?, repeat = ?
+        WHERE id = ?`
+	res, err := config.DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat, task.ID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+// удаление из БД
+func DeleteTaskByID(id int) error {
+	query := "DELETE FROM scheduler WHERE id = ?"
+	_, err := config.DB.Exec(query, id)
+	return err
+}
+
+// обновление задачи только при наличии remind по дате
+func UpdateTaskDate(id uint64, newDate string) error {
+	query := "UPDATE scheduler SET date = ? WHERE id = ?"
+	_, err := config.DB.Exec(query, newDate, id)
+	return err
 }

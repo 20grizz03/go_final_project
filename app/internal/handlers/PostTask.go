@@ -6,6 +6,7 @@ import (
 	"go_final/app/internal/models"
 	"go_final/app/internal/repeatTask"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -66,13 +67,15 @@ func PostTask(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	id, err := db.InsertInDB(task)
+	idForResponse := strconv.Itoa(int(id))
+
 	if err != nil {
 		http.Error(w, `{"error":"Ошибка записи в БД"}`, http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id": id,
+	json.NewEncoder(w).Encode(map[string]string{
+		"id": idForResponse,
 	})
 }
